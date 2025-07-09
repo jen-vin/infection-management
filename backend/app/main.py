@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.endpoints import cases, contacts, measure, users, dashboard, notifications, auth
 
-app = FastAPI(title="Infection Management System")
+app = FastAPI()
 
 # CORS (Cross-Origin Resource Sharing)
 app.add_middleware(
@@ -12,12 +13,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(cases.router)
+app.include_router(contacts.router)
+app.include_router(measure.router)
+app.include_router(users.router)
+app.include_router(dashboard.router)
+app.include_router(notifications.router)
+app.include_router(auth.router)
+
 @app.get("/", tags=["Root"])
 async def read_root():
-    return {"message": "Welcome to the Infection Management System API"}
-
-# Hier werden später die API-Router eingebunden
-# from .api.endpoints import cases, contacts, users
-# app.include_router(users.router, prefix="/api/v1", tags=["users"])
-# app.include_router(cases.router, prefix="/api/v1", tags=["cases"])
-# app.include_router(contacts.router, prefix="/api/v1", tags=["contacts"]) 
+    return {"message": "Welcome to the Infection Management System API"} 
