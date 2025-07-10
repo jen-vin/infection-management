@@ -60,6 +60,7 @@ def sample_case_data():
         "status": "Aktiv",
         "date_reported": "2024-01-15",
         "region": "Berlin",
+        "user_app_id": "test_user_123",
         "symptoms": ["Fieber", "Husten"],
         "phone": "+49123456789",
         "email": "max@example.com",
