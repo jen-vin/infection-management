@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import cases, contacts, measure, users, dashboard, notifications, auth
+from app.api.endpoints import cases, contacts, measure, users, dashboard, notifications, auth, contact_reports
 from sqlalchemy.orm import Session
 from .models.db_base import SessionLocal, engine, Base
 from .models.user import User
@@ -32,6 +32,7 @@ app.include_router(users.router)
 app.include_router(dashboard.router)
 app.include_router(notifications.router)
 app.include_router(auth.router)
+app.include_router(contact_reports.router)
 
 @app.get("/", tags=["Root"])
 async def read_root():

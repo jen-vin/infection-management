@@ -15,6 +15,7 @@ class Case(Base):
     date_reported = Column(Date, nullable=False)
     region = Column(String, nullable=False)
     symptoms = Column(String, nullable=True)  # Kommagetrennt, alternativ ARRAY(String) für Postgres
+    user_app_id = Column(String, nullable=False)
     contacts = Column(Integer, nullable=True)
     phone = Column(String, nullable=True)
     email = Column(String, nullable=True)

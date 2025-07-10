@@ -2,8 +2,12 @@ const API_BASE_URL = 'http://localhost:8000';
 
 export async function getCases() {
   const res = await fetch(`${API_BASE_URL}/cases/`);
+  if (!res.ok) {
+    throw new Error(`Fehler beim Laden der Fälle: ${res.statusText}`);
+  }
   return res.json();
 }
+
 
 export async function createCase(data) {
   const res = await fetch(`${API_BASE_URL}/cases/`, {
@@ -72,4 +76,10 @@ export async function login(username, password) {
     body: JSON.stringify({ username, password })
   });
   return res.json();
+}
+
+export async function fetchReportsByUserId(userId) {
+  const response = await fetch(`http://localhost:8000/reports/?user_app_id=${userId}`);
+  if (!response.ok) throw new Error("Fehler beim Laden der Berichte");
+  return await response.json();
 }

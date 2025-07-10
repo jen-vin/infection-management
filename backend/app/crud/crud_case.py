@@ -1,11 +1,20 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 from typing import List, Optional
 
 from app.models.case import Case
 from app.schemas.case import CaseCreate, CaseUpdate 
+from app.models.contact_report import ContactReport
 
 def create_case(db: Session, obj_in: CaseCreate) -> Case:
+    contact_count = db.query(ContactReport).filter(
+    or_ (
+        ContactReport.contact_1_id == obj_in.user_app_id,
+        ContactReport.contact_2_id == obj_in.user_app_id
+    )
+    ).count()
+
     db_case = Case(
         name=obj_in.name,
         age=obj_in.age,
@@ -13,10 +22,11 @@ def create_case(db: Session, obj_in: CaseCreate) -> Case:
         date_reported=obj_in.date_reported,
         region=obj_in.region,
         symptoms=",".join(obj_in.symptoms) if obj_in.symptoms else "",
-        contacts=obj_in.contacts,
+        contacts=contact_count,
         phone=obj_in.phone,
         email=obj_in.email,
         address=obj_in.address,
+        user_app_id=obj_in.user_app_id,
         test_date=obj_in.test_date,
         test_result=obj_in.test_result,
         notes=obj_in.notes,

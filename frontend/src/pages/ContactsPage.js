@@ -1,63 +1,14 @@
 import React, { useState } from 'react';
 import './ContactsPage.css';
+import { fetchReportsByUserId } from '../services/api';
+
 
 const ContactsPage = () => {
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: 'Lisa Weber',
-      relation: 'Kollege',
-      contactDate: '2024-01-14',
-      riskLevel: 'Hoch',
-      status: 'Quarantäne',
-      sourceCase: 'Max Mustermann',
-      phone: '+49 30 98765432',
-      email: 'lisa.weber@email.com',
-      contactDuration: '8 Stunden',
-      contactLocation: 'Büro - Schreibtisch nebeneinander',
-      symptoms: 'Keine',
-      testStatus: 'Ausstehend',
-      notificationSent: true,
-      notificationDate: '2024-01-15 09:30'
-    },
-    {
-      id: 2,
-      name: 'Tom Fischer',
-      relation: 'Familienmitglied',
-      contactDate: '2024-01-13',
-      riskLevel: 'Mittel',
-      status: 'Überwachung',
-      sourceCase: 'Max Mustermann',
-      phone: '+49 30 11223344',
-      email: 'tom.fischer@email.com',
-      contactDuration: '24 Stunden',
-      contactLocation: 'Gemeinsame Wohnung',
-      symptoms: 'Leichte Müdigkeit',
-      testStatus: 'Negativ',
-      notificationSent: true,
-      notificationDate: '2024-01-14 14:15'
-    },
-    {
-      id: 3,
-      name: 'Sarah Klein',
-      relation: 'Nachbar',
-      contactDate: '2024-01-12',
-      riskLevel: 'Niedrig',
-      status: 'Informiert',
-      sourceCase: 'Anna Schmidt',
-      phone: '+49 40 55667788',
-      email: 'sarah.klein@email.com',
-      contactDuration: '15 Minuten',
-      contactLocation: 'Hausflur - kurzer Austausch',
-      symptoms: 'Keine',
-      testStatus: 'Nicht erforderlich',
-      notificationSent: true,
-      notificationDate: '2024-01-13 10:45'
-    }
-  ]);
+  const [contacts, setContacts] = useState([]);
 
   const [selectedContact, setSelectedContact] = useState(null);
   const [editingContact, setEditingContact] = useState(null);
+  const [searchID, setSearchID] = useState('');
 
   const getRiskColor = (riskLevel) => {
     switch (riskLevel) {
@@ -106,7 +57,14 @@ const ContactsPage = () => {
       c.id === contactId ? { ...c, status: newStatus } : c
     ));
   };
-
+  const getRiskColorByInt = (risk) => {
+    switch (risk) {
+      case 3: return 'risk-high';
+      case 2: return 'risk-medium';
+      case 1: return 'risk-low';
+      default: return '';
+    }
+  };
   return (
     <div className="contacts-page">
       <div className="page-header">
@@ -118,13 +76,36 @@ const ContactsPage = () => {
         </div>
       </div>
 
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            const data = await fetchReportsByUserId(searchID.trim());
+            setContacts(data);
+          } catch (err) {
+            console.error("Fehler beim Laden der Berichte:", err);
+          }
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Suche nach App-ID"
+          value={searchID}
+          onChange={(e) => setSearchID(e.target.value)}
+          style={{ padding: '0.5rem', margin: '1rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
+        />
+        <button type="submit">Suchen</button>
+      </form>
+
+
+
       <div className="info-box">
         <h3>🔍 Wie funktioniert die automatische Kontaktverfolgung?</h3>
         <p>
           Das System identifiziert Kontaktpersonen automatisch durch verschiedene Methoden:
         </p>
         <ul>
-          <li><strong>Corona-Warn-App Integration:</strong> Bluetooth-basierte Kontakterkennung über 15 Minuten in 2m Abstand</li>
+          <li><strong>Infektions-Warn-App Integration:</strong> Bluetooth-basierte Kontakterkennung über 15 Minuten in 2m Abstand</li>
           <li><strong>Lokationsdaten:</strong> GPS-Tracking von Aufenthaltsorten und Zeiträumen</li>
           <li><strong>QR-Code Check-ins:</strong> Automatische Registrierung in Restaurants, Geschäften, etc.</li>
           <li><strong>Manuelle Angaben:</strong> Vom Infizierten gemeldete Kontakte und Aufenthaltsorte</li>
@@ -137,277 +118,47 @@ const ContactsPage = () => {
 
       <div className="contacts-content">
         <div className="contacts-list">
-          <h3>Kontaktpersonen</h3>
+          <h3>Kontaktberichte</h3>
           <div className="contacts-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Beziehung</th>
-                  <th>Kontaktdatum</th>
-                  <th>Risiko</th>
-                  <th>Status</th>
-                  <th>Test</th>
-                  <th>Quellfall</th>
-                  <th>Aktionen</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts.map(contact => (
-                  <tr 
-                    key={contact.id}
-                    onClick={() => setSelectedContact(contact)}
-                    className={selectedContact?.id === contact.id ? 'selected' : ''}
-                  >
-                    <td>{contact.name}</td>
-                    <td>{contact.relation}</td>
-                    <td>{contact.contactDate}</td>
-                    <td>
-                      <span className={`risk-level ${getRiskColor(contact.riskLevel)}`}>
-                        {contact.riskLevel}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`status ${getStatusColor(contact.status)}`}>
-                        {contact.status}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`test-status ${getTestStatusColor(contact.testStatus)}`}>
-                        {contact.testStatus}
-                      </span>
-                    </td>
-                    <td>{contact.sourceCase}</td>
-                    <td>
-                      <button className="action-btn">Details</button>
-                      <button 
-                        className="action-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditContact(contact);
-                        }}
-                      >
-                        Bearbeiten
-                      </button>
-                    </td>
+            {contacts.length === 0 ? (
+              <p>Keine Kontakte gefunden.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Kontakt 1 (App-ID)</th>
+                    <th>Kontakt 2 (App-ID)</th>
+                    <th>Region</th>
+                    <th>Datum</th>
+                    <th>Risiko</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {contacts.map((report) => (
+                    <tr key={report.id}>
+                      <td>{report.id}</td>
+                      <td>{report.contact_1_id}</td>
+                      <td>{report.contact_2_id}</td>
+                      <td>{report.region}</td>
+                      <td>{report.contact_date}</td>
+                      <td>
+                        <span className={`risk-level ${getRiskColorByInt(report.risk)}`}>
+                          {report.risk === 3
+                            ? "Hoch"
+                            : report.risk === 2
+                            ? "Mittel"
+                            : "Niedrig"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
-
-        {selectedContact && (
-          <div className="contact-details">
-            <div className="details-header">
-              <h3>Details: {selectedContact.name}</h3>
-              <button 
-                className="close-btn"
-                onClick={() => setSelectedContact(null)}
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="details-grid">
-              <div className="detail-section">
-                <h4>Persönliche Daten</h4>
-                <div className="detail-item">
-                  <label>Name:</label>
-                  <span>{selectedContact.name}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Beziehung:</label>
-                  <span>{selectedContact.relation}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Telefon:</label>
-                  <span>{selectedContact.phone}</span>
-                </div>
-                <div className="detail-item">
-                  <label>E-Mail:</label>
-                  <span>{selectedContact.email}</span>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <h4>Kontakt-Informationen</h4>
-                <div className="detail-item">
-                  <label>Kontaktdatum:</label>
-                  <span>{selectedContact.contactDate}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Dauer:</label>
-                  <span>{selectedContact.contactDuration}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Ort:</label>
-                  <span>{selectedContact.contactLocation}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Quellfall:</label>
-                  <span>{selectedContact.sourceCase}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="details-grid">
-              <div className="detail-section">
-                <h4>Gesundheitsstatus</h4>
-                <div className="detail-item">
-                  <label>Risikolevel:</label>
-                  <span className={`risk-level ${getRiskColor(selectedContact.riskLevel)}`}>
-                    {selectedContact.riskLevel}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <label>Status:</label>
-                  <span className={`status ${getStatusColor(selectedContact.status)}`}>
-                    {selectedContact.status}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <label>Symptome:</label>
-                  <span>{selectedContact.symptoms}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Teststatus:</label>
-                  <span className={`test-status ${getTestStatusColor(selectedContact.testStatus)}`}>
-                    {selectedContact.testStatus}
-                  </span>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <h4>Benachrichtigung</h4>
-                <div className="detail-item">
-                  <label>Benachrichtigung gesendet:</label>
-                  <span className={selectedContact.notificationSent ? 'notification-sent' : 'notification-pending'}>
-                    {selectedContact.notificationSent ? '✓ Ja' : '✗ Nein'}
-                  </span>
-                </div>
-                {selectedContact.notificationSent && (
-                  <div className="detail-item">
-                    <label>Gesendet am:</label>
-                    <span>{selectedContact.notificationDate}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="contact-actions">
-              <div className="status-actions">
-                <h4>Status ändern:</h4>
-                <div className="status-buttons">
-                  <button 
-                    className={`status-btn ${selectedContact.status === 'Quarantäne' ? 'active' : ''}`}
-                    onClick={() => handleStatusChange(selectedContact.id, 'Quarantäne')}
-                  >
-                    Quarantäne
-                  </button>
-                  <button 
-                    className={`status-btn ${selectedContact.status === 'Überwachung' ? 'active' : ''}`}
-                    onClick={() => handleStatusChange(selectedContact.id, 'Überwachung')}
-                  >
-                    Überwachung
-                  </button>
-                  <button 
-                    className={`status-btn ${selectedContact.status === 'Informiert' ? 'active' : ''}`}
-                    onClick={() => handleStatusChange(selectedContact.id, 'Informiert')}
-                  >
-                    Informiert
-                  </button>
-                </div>
-              </div>
-              
-              <div className="action-buttons">
-                <button className="btn-primary">Test anordnen</button>
-                <button className="btn-secondary">Kontakt aufnehmen</button>
-                <button 
-                  className="btn-secondary"
-                  onClick={() => handleEditContact(selectedContact)}
-                >
-                  Bearbeiten
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {editingContact && (
-          <div className="edit-contact-form">
-            <h3>Kontakt bearbeiten: {editingContact.name}</h3>
-            <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Name:</label>
-                  <input
-                    type="text"
-                    value={editingContact.name}
-                    onChange={(e) => setEditingContact({...editingContact, name: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Risikolevel:</label>
-                  <select
-                    value={editingContact.riskLevel}
-                    onChange={(e) => setEditingContact({...editingContact, riskLevel: e.target.value})}
-                  >
-                    <option value="Hoch">Hoch</option>
-                    <option value="Mittel">Mittel</option>
-                    <option value="Niedrig">Niedrig</option>
-                  </select>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Status:</label>
-                  <select
-                    value={editingContact.status}
-                    onChange={(e) => setEditingContact({...editingContact, status: e.target.value})}
-                  >
-                    <option value="Quarantäne">Quarantäne</option>
-                    <option value="Überwachung">Überwachung</option>
-                    <option value="Informiert">Informiert</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Teststatus:</label>
-                  <select
-                    value={editingContact.testStatus}
-                    onChange={(e) => setEditingContact({...editingContact, testStatus: e.target.value})}
-                  >
-                    <option value="Ausstehend">Ausstehend</option>
-                    <option value="Positiv">Positiv</option>
-                    <option value="Negativ">Negativ</option>
-                    <option value="Nicht erforderlich">Nicht erforderlich</option>
-                  </select>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Symptome:</label>
-                <input
-                  type="text"
-                  value={editingContact.symptoms}
-                  onChange={(e) => setEditingContact({...editingContact, symptoms: e.target.value})}
-                />
-              </div>
-              <div className="form-actions">
-                <button type="submit" className="save-btn">Speichern</button>
-                <button 
-                  type="button" 
-                  className="cancel-btn"
-                  onClick={handleCancelEdit}
-                >
-                  Abbrechen
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
       </div>
-
       <div className="contact-network">
         <h3>Kontaktnetzwerk</h3>
         <div className="network-visualization">

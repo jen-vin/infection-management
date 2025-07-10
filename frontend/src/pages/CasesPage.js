@@ -1,86 +1,26 @@
-import React, { useState } from 'react';
-import { createCase } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { createCase, getCases } from '../services/api';
 import './CasesPage.css';
 
 const CasesPage = () => {
-  const [cases, setCases] = useState([
-    {
-      id: 1,
-      name: 'Max Mustermann',
-      age: 34,
-      status: 'Aktiv',
-      dateReported: '2024-01-15',
-      region: 'Berlin',
-      symptoms: 'Fieber, Husten',
-      contacts: 8,
-      phone: '+49 30 12345678',
-      email: 'max.mustermann@email.com',
-      address: 'Musterstraße 123, 10115 Berlin',
-      testDate: '2024-01-14',
-      testResult: 'Positiv',
-      contactHistory: [
-        { date: '2024-01-13', location: 'Büro', duration: '8h', risk: 'Hoch' },
-        { date: '2024-01-12', location: 'Supermarkt', duration: '30min', risk: 'Mittel' },
-        { date: '2024-01-11', location: 'Öffentlicher Nahverkehr', duration: '45min', risk: 'Niedrig' }
-      ],
-      notes: 'Patient zeigt milde Symptome, ist in häuslicher Quarantäne',
-      measures: [
-        { type: 'Quarantäne', date: '2024-01-15', duration: '14 Tage', status: 'Aktiv' },
-        { type: 'PCR-Test', date: '2024-01-14', result: 'Positiv', status: 'Abgeschlossen' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Anna Schmidt',
-      age: 28,
-      status: 'Genesen',
-      dateReported: '2024-01-10',
-      region: 'Hamburg',
-      symptoms: 'Geschmacksverlust',
-      contacts: 5,
-      phone: '+49 40 87654321',
-      email: 'anna.schmidt@email.com',
-      address: 'Beispielweg 456, 20095 Hamburg',
-      testDate: '2024-01-09',
-      testResult: 'Positiv',
-      contactHistory: [
-        { date: '2024-01-08', location: 'Fitnessstudio', duration: '1h', risk: 'Hoch' },
-        { date: '2024-01-07', location: 'Restaurant', duration: '2h', risk: 'Mittel' }
-      ],
-      notes: 'Patient ist vollständig genesen, kann aus Quarantäne entlassen werden',
-      measures: [
-        { type: 'Quarantäne', date: '2024-01-10', duration: '10 Tage', status: 'Beendet' },
-        { type: 'PCR-Test', date: '2024-01-09', result: 'Positiv', status: 'Abgeschlossen' },
-        { type: 'Antikörper-Test', date: '2024-01-20', result: 'Positiv', status: 'Abgeschlossen' }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Peter Müller',
-      age: 45,
-      status: 'Quarantäne',
-      dateReported: '2024-01-12',
-      region: 'München',
-      symptoms: 'Müdigkeit, Kopfschmerzen',
-      contacts: 12,
-      phone: '+49 89 11223344',
-      email: 'peter.mueller@email.com',
-      address: 'Teststraße 789, 80331 München',
-      testDate: '2024-01-11',
-      testResult: 'Positiv',
-      contactHistory: [
-        { date: '2024-01-10', location: 'Konferenz', duration: '4h', risk: 'Hoch' },
-        { date: '2024-01-09', location: 'Flughafen', duration: '2h', risk: 'Mittel' },
-        { date: '2024-01-08', location: 'Hotel', duration: '24h', risk: 'Hoch' }
-      ],
-      notes: 'Patient hat Kontakt zu mehreren Personen gehabt, intensive Kontaktverfolgung erforderlich',
-      measures: [
-        { type: 'Quarantäne', date: '2024-01-12', duration: '14 Tage', status: 'Aktiv' },
-        { type: 'PCR-Test', date: '2024-01-11', result: 'Positiv', status: 'Abgeschlossen' },
-        { type: 'Kontaktverfolgung', date: '2024-01-12', contacts: 12, status: 'In Bearbeitung' }
-      ]
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+  const fetchCases = async () => {
+    try {
+      const data = await getCases();
+      setCases(data);
+    } catch (err) {
+      console.error('Fehler beim Laden der Fälle:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  fetchCases();
+  }, []);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
@@ -100,7 +40,9 @@ const CasesPage = () => {
     symptoms: [],
     phone: '',
     email: '',
-    address: ''
+    address: '',
+    user_app_id: '',
+    date_reported: ''
   });
 
   // Regionale Daten für Empfehlungen
@@ -302,8 +244,10 @@ const CasesPage = () => {
     console.log("Sending to backend:", caseToAdd);
 
     try {
-      const savedCase = await createCase(caseToAdd);
-      setCases(prev => [...prev, savedCase]);
+      await createCase(caseToAdd);
+      const updatedCases = await getCases();
+      setCases(updatedCases);
+
     } catch (error) {
       console.error('Fehler beim Speichern des Falls:', error);
     }
@@ -315,7 +259,9 @@ const CasesPage = () => {
       symptoms: [],
       phone: '',
       email: '',
-      address: ''
+      address: '',
+      user_app_id: '',
+      date_reported: ''
     });
     setShowAddForm(false);
   };
@@ -522,6 +468,16 @@ const CasesPage = () => {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label>App-ID (user_app_id):</label>
+                <input
+                  type="text"
+                  value={newCase.user_app_id}
+                  onChange={(e) => setNewCase({ ...newCase, user_app_id: e.target.value })}
+                  required
+                />
+              </div>
+
             </div>
             <div className="form-actions">
               <button type="submit" className="save-btn">Speichern</button>
@@ -538,6 +494,8 @@ const CasesPage = () => {
       )}
 
       <div className="cases-content">
+        {loading && <p>Fälle werden geladen...</p>}
+        {error && <p style={{ color: 'red' }}>Fehler: {error}</p>}
         <div className="cases-table">
           <table>
             <thead>
@@ -564,7 +522,7 @@ const CasesPage = () => {
                       {caseItem.status}
                     </span>
                   </td>
-                  <td>{caseItem.dateReported}</td>
+                  <td>{caseItem.date_reported}</td>
                   <td>{caseItem.region}</td>
                   <td>{caseItem.symptoms}</td>
                   <td>
@@ -573,12 +531,6 @@ const CasesPage = () => {
                     </span>
                   </td>
                   <td>
-                    <button 
-                      className="action-btn"
-                      onClick={() => setSelectedCase(caseItem)}
-                    >
-                      Details
-                    </button>
                     <button 
                       className="action-btn"
                       onClick={() => handleEditCase(caseItem)}
