@@ -102,6 +102,7 @@ const CasesPage = () => {
     email: '',
     address: ''
   });
+  const [formErrors, setFormErrors] = useState({});
 
   // Regionale Daten für Empfehlungen
   const regionalData = {
@@ -278,8 +279,44 @@ const CasesPage = () => {
     return recommendations;
   };
 
+  const validateCase = (values) => {
+    const errors = {};
+    // Name: min. 2 Zeichen, nur Buchstaben, Leerzeichen, Bindestrich
+    if (!values.name || values.name.trim().length < 2) {
+      errors.name = 'Name muss mindestens 2 Zeichen lang sein';
+    } else if (!/^[A-Za-zÄÖÜäöüß\s-]+$/.test(values.name)) {
+      errors.name = 'Name darf nur Buchstaben, Leerzeichen und Bindestriche enthalten';
+    }
+    // Alter: 0-120
+    if (!values.age || isNaN(values.age) || values.age < 0 || values.age > 120) {
+      errors.age = 'Alter muss zwischen 0 und 120 liegen';
+    }
+    // Telefon: nur Ziffern, Leerzeichen, +, -, Klammern
+    if (values.phone && !/^[\d\s+\-()]+$/.test(values.phone)) {
+      errors.phone = 'Telefonnummer darf nur Ziffern, Leerzeichen, +, - und Klammern enthalten';
+    }
+    // E-Mail: HTML5-Validierung reicht meist, aber für Feedback:
+    if (values.email && !/^\S+@\S+\.\S+$/.test(values.email)) {
+      errors.email = 'Bitte eine gültige E-Mail-Adresse eingeben';
+    }
+    // Region: Pflichtfeld
+    if (!values.region) {
+      errors.region = 'Bitte eine Region auswählen';
+    }
+    // Symptome: Pflichtfeld
+    if (!values.symptoms || values.symptoms.length < 1) {
+      errors.symptoms = 'Bitte mindestens ein Symptom angeben';
+    }
+    return errors;
+  };
+
   const handleAddCase = async (e) => {
     e.preventDefault();
+    const errors = validateCase(newCase);
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
 
     const caseToAdd = {
       ...newCase,
@@ -457,6 +494,7 @@ const CasesPage = () => {
                   onChange={(e) => setNewCase({...newCase, name: e.target.value})}
                   required
                 />
+                {formErrors.name && <div className="form-error">{formErrors.name}</div>}
               </div>
               <div className="form-group">
                 <label>Alter:</label>
@@ -466,6 +504,7 @@ const CasesPage = () => {
                   onChange={(e) => setNewCase({...newCase, age: e.target.value})}
                   required
                 />
+                {formErrors.age && <div className="form-error">{formErrors.age}</div>}
               </div>
             </div>
             <div className="form-row">
@@ -477,6 +516,7 @@ const CasesPage = () => {
                   onChange={(e) => setNewCase({...newCase, phone: e.target.value})}
                   required
                 />
+                {formErrors.phone && <div className="form-error">{formErrors.phone}</div>}
               </div>
               <div className="form-group">
                 <label>E-Mail:</label>
@@ -486,6 +526,7 @@ const CasesPage = () => {
                   onChange={(e) => setNewCase({...newCase, email: e.target.value})}
                   required
                 />
+                {formErrors.email && <div className="form-error">{formErrors.email}</div>}
               </div>
             </div>
             <div className="form-group">
@@ -512,6 +553,7 @@ const CasesPage = () => {
                   <option value="Köln">Köln</option>
                   <option value="Frankfurt">Frankfurt</option>
                 </select>
+                {formErrors.region && <div className="form-error">{formErrors.region}</div>}
               </div>
               <div className="form-group">
                 <label>Symptome:</label>
@@ -521,6 +563,7 @@ const CasesPage = () => {
                   onChange={(e) => setNewCase({...newCase, symptoms: e.target.value})}
                   required
                 />
+                {formErrors.symptoms && <div className="form-error">{formErrors.symptoms}</div>}
               </div>
             </div>
             <div className="form-actions">
