@@ -170,3 +170,44 @@ Bei Fragen oder Problemen:
 ---
 
 **Entwickelt für** Gesundheitsbehörden und Infektionsschutz 
+
+## 🛡️ Validierte Randfälle & Fehlerbehandlung
+
+Das System prüft und verhindert fehlerhafte oder unplausible Eingaben sowohl im Backend (API) als auch im Frontend (Formular). Zu den wichtigsten validierten Randfällen gehören:
+
+- **Name:** Mindestens 2 Zeichen, nur Buchstaben, Leerzeichen und Bindestriche erlaubt
+- **Alter:** Muss zwischen 0 und 120 liegen
+- **Telefonnummer:** Nur Ziffern, Leerzeichen, +, - und Klammern erlaubt
+- **E-Mail:** Muss gültiges Format haben
+- **Region:** Pflichtfeld, Auswahl aus vordefinierten Regionen
+- **Symptome:** Mindestens ein Symptom muss angegeben werden
+- **Erkrankungsdatum:** Darf nicht in der Zukunft liegen
+- **Testdatum:** Darf nicht vor dem Erkrankungsdatum liegen
+- **Alle Pflichtfelder:** Müssen ausgefüllt sein
+- **Backend:** Fängt alle Validierungsfehler ab und gibt verständliche Fehlermeldungen zurück
+- **Frontend:** Zeigt Fehler direkt im Formular an und verhindert das Absenden bei ungültigen Eingaben
+
+## 📝 Beispiel-Workflows
+
+### 1. Neuen Infektionsfall anlegen
+1. Klicke im Dashboard auf **"+ Neuer Fall"**
+2. Fülle alle Pflichtfelder aus (Name, Alter, Region, Symptome, etc.)
+3. Klicke auf **"Speichern"**
+4. Bei fehlerhaften Eingaben erscheint eine Fehlermeldung direkt im Formular
+5. Nach erfolgreicher Anlage erscheint der neue Fall in der Fallübersicht
+
+### 2. Kontaktverfolgung durchführen
+1. Wähle einen bestehenden Fall in der Übersicht aus und öffne die Detailansicht
+2. Klicke auf **"Kontakte verfolgen"**
+3. Sieh dir die automatisch ermittelten und manuell erfassten Kontakte an
+4. Ergänze bei Bedarf weitere Kontaktpersonen
+
+### 3. Maßnahmen anordnen
+1. Wähle einen Fall aus und öffne die Detailansicht
+2. Klicke auf **"Maßnahmen anordnen"**
+3. Wähle eine Maßnahme (z.B. Quarantäne, Test) und gib die Details ein
+4. Speichere die Maßnahme – sie erscheint in der Maßnahmenliste des Falls
+
+### 4. Fehlerhafte Eingabe testen
+1. Versuche, einen Fall mit ungültigen Daten (z.B. Name = "1", Alter = 200) anzulegen
+2. Das System zeigt eine passende Fehlermeldung und verhindert die Speicherung 

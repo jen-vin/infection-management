@@ -79,3 +79,26 @@ def test_case_invalid_email(client, sample_case_data):
     response = client.post("/cases/", json=data)
     assert response.status_code == 422
     assert "value is not a valid email address" in response.text 
+
+# Test: Liste aller Fälle enthält die neu angelegten Fälle
+# (Debug-Ausgaben helfen, Fehlerquellen zu finden)
+def test_list_cases_api(client, sample_case_data):
+    # Ersten Fall anlegen
+    case1_data = sample_case_data.copy()
+    case1_data["name"] = "Case 1"
+    response1 = client.post("/cases/", json=case1_data)
+    print("POST 1 response:", response1.status_code, response1.json())
+    # Zweiten Fall anlegen
+    case2_data = sample_case_data.copy()
+    case2_data["name"] = "Case 2"
+    response2 = client.post("/cases/", json=case2_data)
+    print("POST 2 response:", response2.status_code, response2.json())
+    # Alle Fälle abrufen
+    response = client.get("/cases/")
+    print("GET response:", response.status_code, response.json())
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) >= 2
+    case_names = [case["name"] for case in data]
+    assert "Case 1" in case_names
+    assert "Case 2" in case_names 
