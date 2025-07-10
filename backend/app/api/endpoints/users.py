@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from app.models.user import User
 from app.crud import crud_user
+from app.models.db_base import SessionLocal
 
 class UserCreate(BaseModel):
     username: str
@@ -24,7 +25,11 @@ class UserOut(BaseModel):
 router = APIRouter()
 
 def get_db():
-    return None
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 @router.get("/users/", response_model=List[UserOut])
 def list_users():

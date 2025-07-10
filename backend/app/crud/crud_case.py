@@ -1,46 +1,58 @@
-from app.models.case import Case, CaseHistoryEntry
-from datetime import datetime
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import NoResultFound
+from typing import List, Optional
 
-cases_db = {}
-case_id_counter = 1
+from app.models.case import Case
+from app.schemas.case import CaseCreate, CaseUpdate 
 
-def create_case(db, obj_in):
-    global case_id_counter
-    history = obj_in.history or []
-    if not history:
-        history = [CaseHistoryEntry(status=obj_in.status, timestamp=datetime.now())]
-    case = Case(
-        id=case_id_counter,
+def create_case(db: Session, obj_in: CaseCreate) -> Case:
+    db_case = Case(
         name=obj_in.name,
         age=obj_in.age,
         status=obj_in.status,
-        history=history,
-        symptoms=obj_in.symptoms or [],
-        locations=obj_in.locations or []
+        date_reported=obj_in.date_reported,
+        region=obj_in.region,
+        symptoms=",".join(obj_in.symptoms) if obj_in.symptoms else "",
+        contacts=obj_in.contacts,
+        phone=obj_in.phone,
+        email=obj_in.email,
+        address=obj_in.address,
+        test_date=obj_in.test_date,
+        test_result=obj_in.test_result,
+        notes=obj_in.notes,
+        contact_history=obj_in.contact_history,
+        measures=obj_in.measures,
     )
-    cases_db[case.id] = case
-    case_id_counter += 1
-    return case
+    db.add(db_case)
+    db.commit()
+    db.refresh(db_case)
+    return db_case
 
-def get_case(db, id):
-    return cases_db.get(id)
+def get_case(db: Session, case_id: int) -> Optional[Case]:
+    return db.query(Case).filter(Case.id == case_id).first()
 
-def update_case(db, db_obj, obj_in):
-    updated = False
-    if obj_in.status and obj_in.status != db_obj.status:
-        db_obj.status = obj_in.status
-        db_obj.history.append(CaseHistoryEntry(status=obj_in.status, timestamp=datetime.now()))
-        updated = True
-    for field in ['name', 'age', 'symptoms', 'locations']:
-        value = getattr(obj_in, field, None)
-        if value is not None:
-            setattr(db_obj, field, value)
-            updated = True
-    return db_obj if updated else None
+def list_cases(db: Session) -> List[Case]:
+    return db.query(Case).all()
 
-def remove_case(db, id):
-    if id in cases_db:
-        del cases_db[id]
+def update_case(db: Session, case_id: int, obj_in: CaseUpdate) -> Optional[Case]:
+    db_case = db.query(Case).filter(Case.id == case_id).first()
+    if not db_case:
+        return None
 
-def list_cases(db):
-    return list(cases_db.values())
+    update_data = obj_in.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        if field == "symptoms" and isinstance(value, list):
+            value = ",".join(value)
+        setattr(db_case, field, value)
+
+    db.commit()
+    db.refresh(db_case)
+    return db_case
+
+def remove_case(db: Session, case_id: int) -> bool:
+    db_case = db.query(Case).filter(Case.id == case_id).first()
+    if not db_case:
+        return False
+    db.delete(db_case)
+    db.commit()
+    return True

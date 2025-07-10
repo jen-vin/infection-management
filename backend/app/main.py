@@ -1,17 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import cases, contacts, measure, users, dashboard, notifications, auth
-
+from sqlalchemy.orm import Session
+from .models.db_base import SessionLocal, engine, Base
+from .models.user import User
 app = FastAPI()
+Base.metadata.create_all(bind=engine)
+
+origins = [
+    "http://localhost:3030",
+    "http://localhost",
+    "http://localhost:8000",
+    "http://frontend/*",
+]
 
 # CORS (Cross-Origin Resource Sharing)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Erlaubt Anfragen vom React-Frontend
+    allow_origins=origins,  # Erlaubt Anfragen vom React-Frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 app.include_router(cases.router)
 app.include_router(contacts.router)

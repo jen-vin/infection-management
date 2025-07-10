@@ -1,9 +1,11 @@
-fastapi
+fastapi[all]
 uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 python-jose[cryptography]
 passlib[bcrypt]
 pydantic[email]
+pydantic-settings
 tenacity
 gunicorn 
+alembic

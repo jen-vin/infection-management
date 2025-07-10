@@ -1,18 +1,34 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-from datetime import datetime
+from datetime import date
 
-class CaseHistoryEntrySchema(BaseModel):
-    status: str
-    timestamp: datetime
+class CaseBase(BaseModel):
+    name: Optional[str] = None
+    age: Optional[int] = None
+    status: Optional[str] = None
+    date_reported: Optional[date] = None
+    region: Optional[str] = None
+    symptoms: Optional[List[str]] = None
+    contacts: Optional[int] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
+    address: Optional[str] = None
+    test_date: Optional[date] = None
+    test_result: Optional[str] = None
+    notes: Optional[str] = None
+    contact_history: Optional[List[dict]] = None
+    measures: Optional[List[dict]] = None
 
-class CaseCreate(BaseModel):
+
+class CaseCreate(CaseBase):
     name: str
     age: int
     status: str
-    symptoms: Optional[List[str]] = []
-    locations: Optional[List[str]] = []
-    history: Optional[List[CaseHistoryEntrySchema]] = []
+    date_reported: date
+    region: str
+
+    class Config:
+        from_attributes = True
 
 class CaseUpdate(BaseModel):
     name: Optional[str] = None
@@ -20,4 +36,3 @@ class CaseUpdate(BaseModel):
     status: Optional[str] = None
     symptoms: Optional[List[str]] = None
     locations: Optional[List[str]] = None
-    history: Optional[List[CaseHistoryEntrySchema]] = None

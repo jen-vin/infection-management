@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createCase } from '../services/api';
 import './CasesPage.css';
 
 const CasesPage = () => {
@@ -96,7 +97,7 @@ const CasesPage = () => {
     name: '',
     age: '',
     region: '',
-    symptoms: '',
+    symptoms: [],
     phone: '',
     email: '',
     address: ''
@@ -277,27 +278,50 @@ const CasesPage = () => {
     return recommendations;
   };
 
-  const handleAddCase = (e) => {
+  const handleAddCase = async (e) => {
     e.preventDefault();
+
     const caseToAdd = {
-      id: cases.length + 1,
       ...newCase,
       status: 'Aktiv',
-      dateReported: new Date().toISOString().split('T')[0],
+      date_reported: new Date().toISOString().split('T')[0],
       contacts: 0,
-      testDate: new Date().toISOString().split('T')[0],
-      testResult: 'Ausstehend',
-      contactHistory: [],
+      test_date: new Date().toISOString().split('T')[0],
+      test_result: 'Ausstehend',
+      contact_history: [],
       notes: '',
-      measures: []
+      measures: [],
+      symptoms: newCase.symptoms
+        ? newCase.symptoms.split(',').map(s => s.trim())
+        : []
     };
-    setCases([...cases, caseToAdd]);
-    setNewCase({ name: '', age: '', region: '', symptoms: '', phone: '', email: '', address: '' });
+    console.log("newCase.symptoms:", newCase.symptoms);
+    console.log("Processed symptoms:", newCase.symptoms
+      ? newCase.symptoms.split(',').map(s => s.trim())
+      : []);
+    console.log("Sending to backend:", caseToAdd);
+
+    try {
+      const savedCase = await createCase(caseToAdd);
+      setCases(prev => [...prev, savedCase]);
+    } catch (error) {
+      console.error('Fehler beim Speichern des Falls:', error);
+    }
+
+    setNewCase({
+      name: '',
+      age: '',
+      region: '',
+      symptoms: [],
+      phone: '',
+      email: '',
+      address: ''
+    });
     setShowAddForm(false);
   };
 
-  const handleEditCase = (caseItem) => {
-    setEditingCase({ ...caseItem });
+    const handleEditCase = (caseItem) => {
+      setEditingCase({ ...caseItem });
     setSelectedCase(null);
   };
 
