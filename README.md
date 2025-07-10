@@ -134,6 +134,7 @@ REACT_APP_API_URL=http://localhost:8000
 - [API Dokumentation](docs/api.md) - Detaillierte API Endpunkte
 - [Architektur](docs/architecture.md) - Systemarchitektur und Design
 - [Datenmodell](docs/data_model.md) - Datenbankschema und Beziehungen
+- [Fehlertoleranz](docs/error_tolerance.md) - Validierung und Fehlertoleranz-Features
 
 ## 🧪 Tests
 
@@ -171,21 +172,31 @@ Bei Fragen oder Problemen:
 
 **Entwickelt für** Gesundheitsbehörden und Infektionsschutz 
 
-## 🛡️ Validierte Randfälle & Fehlerbehandlung
+## 🛡️ Fehlertoleranz & Validierung
 
-Das System prüft und verhindert fehlerhafte oder unplausible Eingaben sowohl im Backend (API) als auch im Frontend (Formular). Zu den wichtigsten validierten Randfällen gehören:
+Das System implementiert umfassende Fehlertoleranz-Mechanismen für optimale Benutzerfreundlichkeit und Datenqualität:
 
-- **Name:** Mindestens 2 Zeichen, nur Buchstaben, Leerzeichen und Bindestriche erlaubt
-- **Alter:** Muss zwischen 0 und 120 liegen
-- **Telefonnummer:** Nur Ziffern, Leerzeichen, +, - und Klammern erlaubt
-- **E-Mail:** Muss gültiges Format haben
-- **Region:** Pflichtfeld, Auswahl aus vordefinierten Regionen
-- **Symptome:** Mindestens ein Symptom muss angegeben werden
-- **Erkrankungsdatum:** Darf nicht in der Zukunft liegen
-- **Testdatum:** Darf nicht vor dem Erkrankungsdatum liegen
-- **Alle Pflichtfelder:** Müssen ausgefüllt sein
-- **Backend:** Fängt alle Validierungsfehler ab und gibt verständliche Fehlermeldungen zurück
-- **Frontend:** Zeigt Fehler direkt im Formular an und verhindert das Absenden bei ungültigen Eingaben
+### App-ID Validierung (35 Zeichen)
+- **Strenge Validierung**: Exakt 35 Zeichen, nur A-Z, a-z, 0-9, -, _
+- **Automatische Bereinigung**: Ungültige Zeichen werden entfernt
+- **Zeichenzähler**: Echtzeit-Anzeige der aktuellen Länge
+- **Automatische Generierung**: Button zum Generieren gültiger App-IDs
+- **Visuelle Warnungen**: Gelbe Hervorhebung bei falscher Länge
+
+### Allgemeine Validierung
+- **Name:** Mindestens 2 Zeichen, nur Buchstaben, Leerzeichen und Bindestriche
+- **Alter:** Zwischen 0 und 120 Jahren
+- **Telefon:** Nur Ziffern, Leerzeichen, +, - und Klammern
+- **E-Mail:** Gültiges E-Mail-Format
+- **Region:** Pflichtfeld mit Dropdown-Auswahl
+- **Symptome:** Mindestens ein Symptom erforderlich
+
+### Mehrschichtige Validierung
+- **Frontend**: Echtzeit-Validierung mit sofortigem Feedback
+- **Backend**: Pydantic-Schema-Validierung und Business-Logic
+- **Datenbank**: Constraints und Indizes für Datenintegrität
+
+📖 **Detaillierte Dokumentation**: [Fehlertoleranz & Validierung](docs/error_tolerance.md)
 
 ## 📝 Beispiel-Workflows
 

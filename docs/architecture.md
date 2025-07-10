@@ -59,7 +59,7 @@ src/
 │       └── ContactGraph.js # Kontakt-Graph
 ├── pages/                 # Seitenkomponenten
 │   ├── DashboardPage.js   # Dashboard-Seite
-│   ├── CasesPage.js       # Fälle-Seite
+│   ├── CasesPage.js       # Fälle-Seite (mit Fehlertoleranz)
 │   ├── ContactsPage.js    # Kontakte-Seite
 │   └── StatisticsPage.js  # Statistiken-Seite
 ├── services/              # API-Services
@@ -68,6 +68,24 @@ src/
 └── context/               # React Context
     └── AuthContext.js     # Auth-Context
 ```
+
+#### Fehlertoleranz-Features
+Das Frontend implementiert umfassende Fehlertoleranz für Benutzereingaben:
+
+**App-ID Validierung:**
+- **Automatische Bereinigung**: Ungültige Zeichen werden entfernt
+- **Zeichenzähler**: Echtzeit-Anzeige (X/35)
+- **Visuelle Warnungen**: Gelbe Hervorhebung bei falscher Länge
+- **Automatische Generierung**: Button zum Generieren gültiger IDs
+- **Detaillierte Fehlermeldungen**: Spezifische Validierungshinweise
+
+**Allgemeine Validierung:**
+- **Name**: Mindestens 2 Zeichen, nur Buchstaben/Leerzeichen/Bindestriche
+- **Alter**: 0-120 Jahre
+- **Telefon**: Nur Ziffern, Leerzeichen, +, -, Klammern
+- **E-Mail**: HTML5-Validierung mit zusätzlichem Feedback
+- **Region**: Pflichtfeld mit Dropdown-Auswahl
+- **Symptome**: Mindestens ein Symptom erforderlich
 
 ### 2. Backend (FastAPI)
 
@@ -148,9 +166,10 @@ persons (
 
 -- Fälle
 cases (
-  id, person_id, infection_date, symptoms, 
-  severity, status, region_id, created_by,
-  created_at, updated_at
+  id, name, age, status, date_reported, region,
+  symptoms, user_app_id, contacts, phone, email,
+  address, test_date, test_result, notes,
+  contact_history, measures, created_at, updated_at
 )
 
 -- Kontakte
@@ -166,6 +185,50 @@ measures (
   category, target_group, created_at, updated_at
 )
 ```
+
+## Fehlertoleranz-Architektur
+
+### Validierungsschichten
+
+```
+┌─────────────────┐
+│   Frontend      │ ← Client-seitige Validierung
+│   Validation    │   - Echtzeit-Feedback
+│                 │   - Automatische Bereinigung
+└─────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│   API Gateway   │ ← Request-Validierung
+│   Validation    │   - Pydantic-Schemas
+│                 │   - Format-Prüfung
+└─────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Database      │ ← Datenbank-Constraints
+│   Constraints   │   - CHECK Constraints
+│                 │   - UNIQUE Constraints
+└─────────────────┘
+```
+
+### App-ID Validierungspipeline
+
+1. **Frontend-Ebene:**
+   - Automatische Zeichenbereinigung
+   - Echtzeit-Längenprüfung
+   - Visuelle Warnungen
+   - Generierungs-Button
+
+2. **API-Ebene:**
+   - Pydantic-Schema-Validierung
+   - Regex-Pattern-Prüfung
+   - Detaillierte Fehlermeldungen
+
+3. **Datenbank-Ebene:**
+   - VARCHAR(35) Constraint
+   - CHECK Constraint für Format
+   - UNIQUE Constraint
 
 ## Datenfluss
 

@@ -83,12 +83,22 @@ Verwaltet Infektionsfälle.
 | Feld | Typ | Beschreibung | Constraints |
 |------|-----|--------------|-------------|
 | `id` | SERIAL | Primärschlüssel | PRIMARY KEY |
-| `person_id` | INTEGER | Personen-Referenz | FOREIGN KEY, NOT NULL |
-| `infection_date` | DATE | Infektionsdatum | NOT NULL |
-| `symptoms` | JSONB | Symptome als Array | DEFAULT '[]' |
-| `severity` | ENUM | Schweregrad | 'mild', 'moderate', 'severe' |
-| `status` | ENUM | Fallstatus | 'suspected', 'confirmed', 'recovered', 'deceased' |
-| `created_by` | INTEGER | Erstellender Benutzer | FOREIGN KEY |
+| `name` | VARCHAR(255) | Vollständiger Name | NOT NULL, CHECK (length >= 2) |
+| `age` | INTEGER | Alter | NOT NULL, CHECK (age >= 0 AND age <= 120) |
+| `status` | VARCHAR(50) | Fallstatus | NOT NULL, DEFAULT 'Aktiv' |
+| `date_reported` | DATE | Meldedatum | NOT NULL |
+| `region` | VARCHAR(100) | Region | NOT NULL |
+| `symptoms` | TEXT | Symptome (kommagetrennt) | |
+| `user_app_id` | VARCHAR(35) | App-ID für Kontaktverfolgung | NOT NULL, UNIQUE, CHECK (length = 35) |
+| `contacts` | INTEGER | Anzahl Kontaktpersonen | DEFAULT 0 |
+| `phone` | VARCHAR(50) | Telefonnummer | |
+| `email` | VARCHAR(255) | E-Mail-Adresse | |
+| `address` | TEXT | Adresse | |
+| `test_date` | DATE | Testdatum | |
+| `test_result` | VARCHAR(50) | Testergebnis | |
+| `notes` | TEXT | Notizen | |
+| `contact_history` | JSONB | Kontaktverlauf | DEFAULT '[]' |
+| `measures` | JSONB | Maßnahmen | DEFAULT '[]' |
 | `created_at` | TIMESTAMP | Erstellungsdatum | DEFAULT NOW() |
 | `updated_at` | TIMESTAMP | Änderungsdatum | DEFAULT NOW() |
 
@@ -97,9 +107,18 @@ Verwaltet Infektionsfälle.
 - `created_by` → `users.id`
 
 **Indizes:**
-- `idx_cases_person` auf `person_id`
+- `idx_cases_name` auf `name`
 - `idx_cases_status` auf `status`
-- `idx_cases_infection_date` auf `infection_date`
+- `idx_cases_date_reported` auf `date_reported`
+- `idx_cases_region` auf `region`
+- `idx_cases_user_app_id` auf `user_app_id` (UNIQUE)
+
+**App-ID Validierung:**
+Die `user_app_id` unterliegt strengen Validierungsregeln:
+- **Exakte Länge**: 35 Zeichen (VARCHAR(35))
+- **Erlaubte Zeichen**: A-Z, a-z, 0-9, Bindestrich (-), Unterstrich (_)
+- **Eindeutigkeit**: UNIQUE Constraint
+- **Format**: Alphanumerisch mit Sonderzeichen für Kontaktverfolgung
 
 ### 4. contacts
 
@@ -182,10 +201,22 @@ CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
 
 
 
--- Validierung von Infektionsdaten
+-- Validierung von Fall-Daten
 ALTER TABLE cases 
-ADD CONSTRAINT chk_cases_infection_date 
-CHECK (infection_date <= CURRENT_DATE);
+ADD CONSTRAINT chk_cases_name_length 
+CHECK (length(name) >= 2);
+
+ALTER TABLE cases 
+ADD CONSTRAINT chk_cases_age_range 
+CHECK (age >= 0 AND age <= 120);
+
+ALTER TABLE cases 
+ADD CONSTRAINT chk_cases_user_app_id_format 
+CHECK (user_app_id ~ '^[A-Za-z0-9\-_]{35}$');
+
+ALTER TABLE cases 
+ADD CONSTRAINT chk_cases_date_reported 
+CHECK (date_reported <= CURRENT_DATE);
 
 -- Validierung von Kontaktdaten
 ALTER TABLE contacts 

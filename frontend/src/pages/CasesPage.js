@@ -46,6 +46,16 @@ const CasesPage = () => {
   });
   const [formErrors, setFormErrors] = useState({});
 
+  // Funktion zum Generieren einer gültigen App-ID
+  const generateAppId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    let result = '';
+    for (let i = 0; i < 35; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewCase({ ...newCase, user_app_id: result });
+  };
+
   // Regionale Daten für Empfehlungen
   const regionalData = {
     'Berlin': {
@@ -249,9 +259,13 @@ const CasesPage = () => {
     if (!values.symptoms || values.symptoms.length < 1) {
       errors.symptoms = 'Bitte mindestens ein Symptom angeben';
     }
-    // user_app_id: Pflichtfeld, mindestens 3 Zeichen
-    if (!values.user_app_id || values.user_app_id.trim().length < 3) {
-      errors.user_app_id = 'App-ID muss mindestens 3 Zeichen lang sein';
+    // user_app_id: Pflichtfeld, genau 35 Zeichen
+    if (!values.user_app_id || values.user_app_id.trim().length === 0) {
+      errors.user_app_id = 'App-ID ist ein Pflichtfeld';
+    } else if (values.user_app_id.trim().length !== 35) {
+      errors.user_app_id = 'App-ID muss genau 35 Zeichen lang sein';
+    } else if (!/^[A-Za-z0-9\-_]+$/.test(values.user_app_id.trim())) {
+      errors.user_app_id = 'App-ID darf nur Buchstaben, Zahlen, Bindestriche und Unterstriche enthalten';
     }
     return errors;
   };
@@ -517,13 +531,39 @@ const CasesPage = () => {
               </div>
               <div className="form-group">
                 <label>App-ID (user_app_id):</label>
-                <input
-                  type="text"
-                  value={newCase.user_app_id}
-                  onChange={(e) => setNewCase({ ...newCase, user_app_id: e.target.value })}
-                  required
-                />
+                                <div className="input-with-counter">
+                  <input
+                    type="text"
+                    value={newCase.user_app_id}
+                    onChange={(e) => {
+                      // Automatische Bereinigung: Nur erlaubte Zeichen
+                      const cleanedValue = e.target.value.replace(/[^A-Za-z0-9\-_]/g, '');
+                      setNewCase({ ...newCase, user_app_id: cleanedValue });
+                    }}
+                    maxLength={35}
+                    placeholder="Genau 35 Zeichen (Buchstaben, Zahlen, -_)"
+                    required
+                    className={newCase.user_app_id.length > 0 && newCase.user_app_id.length !== 35 ? 'input-warning' : ''}
+                  />
+                  <div className="char-counter">
+                    {newCase.user_app_id.length}/35
+                  </div>
+                  <button
+                    type="button"
+                    className="generate-btn"
+                    onClick={generateAppId}
+                    title="Automatisch eine gültige App-ID generieren"
+                  >
+                    🔄
+                  </button>
+                </div>
                 {formErrors.user_app_id && <div className="form-error">{formErrors.user_app_id}</div>}
+                <div className="input-help">
+                  <small>
+                    💡 <strong>Fehlertoleranz:</strong> Die App-ID wird automatisch auf 35 Zeichen begrenzt. 
+                    Erlaubte Zeichen: A-Z, a-z, 0-9, Bindestrich (-), Unterstrich (_)
+                  </small>
+                </div>
               </div>
 
             </div>

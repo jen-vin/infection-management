@@ -87,13 +87,33 @@ Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "person_id": 1,
-  "infection_date": "2024-01-15",
-  "symptoms": ["fever", "cough"],
-  "severity": "moderate",
-  "status": "confirmed"
+  "name": "Max Mustermann",
+  "age": 30,
+  "status": "Aktiv",
+  "date_reported": "2024-01-15",
+  "region": "Berlin",
+  "user_app_id": "abc123def456ghi789jkl012mno345pqr678stu901",
+  "symptoms": ["Fieber", "Husten"],
+  "phone": "+49123456789",
+  "email": "max@example.com",
+  "address": "Musterstraße 1, 12345 Berlin",
+  "contacts": 0,
+  "test_date": "2024-01-16",
+  "test_result": "Positiv",
+  "notes": "",
+  "contact_history": [],
+  "measures": []
 }
 ```
+
+**Wichtige Validierungsregeln:**
+- `user_app_id`: **Genau 35 Zeichen**, nur erlaubte Zeichen: A-Z, a-z, 0-9, Bindestrich (-), Unterstrich (_)
+- `name`: Mindestens 2 Zeichen, nur Buchstaben, Leerzeichen, Bindestriche
+- `age`: Zwischen 0 und 120
+- `phone`: Nur Ziffern, Leerzeichen, +, -, Klammern
+- `email`: Gültige E-Mail-Adresse
+- `region`: Pflichtfeld
+- `symptoms`: Mindestens ein Symptom erforderlich
 
 #### Fälle abrufen
 ```http
@@ -102,10 +122,45 @@ Authorization: Bearer <token>
 ```
 
 **Query Parameter:**
-- `status`: Filter nach Status (confirmed, suspected, recovered)
-- `region_id`: Filter nach Region
+- `status`: Filter nach Status (Aktiv, Genesen, Quarantäne)
+- `region`: Filter nach Region
 - `date_from`: Startdatum
 - `date_to`: Enddatum
+
+## Fehlertoleranz und Validierung
+
+### App-ID Validierung
+Das System implementiert strenge Validierung für die `user_app_id`:
+
+**Anforderungen:**
+- **Exakte Länge**: 35 Zeichen
+- **Erlaubte Zeichen**: A-Z, a-z, 0-9, Bindestrich (-), Unterstrich (_)
+- **Format**: Alphanumerisch mit Sonderzeichen
+
+**Fehlertoleranz-Features:**
+- **Automatische Bereinigung**: Ungültige Zeichen werden automatisch entfernt
+- **Zeichenzähler**: Echtzeit-Anzeige der aktuellen Zeichenanzahl
+- **Visuelle Warnungen**: Gelbe Hervorhebung bei falscher Länge
+- **Automatische Generierung**: Button zum Generieren gültiger App-IDs
+- **Detaillierte Fehlermeldungen**: Spezifische Hinweise bei Validierungsfehlern
+
+**Beispiel-Validierungsfehler:**
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "user_app_id"],
+      "msg": "App-ID muss genau 35 Zeichen lang sein",
+      "type": "value_error"
+    },
+    {
+      "loc": ["body", "user_app_id"],
+      "msg": "App-ID darf nur Buchstaben, Zahlen, Bindestriche und Unterstriche enthalten",
+      "type": "value_error"
+    }
+  ]
+}
+```
 
 #### Fall abrufen
 ```http
