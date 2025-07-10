@@ -249,6 +249,10 @@ const CasesPage = () => {
     if (!values.symptoms || values.symptoms.length < 1) {
       errors.symptoms = 'Bitte mindestens ein Symptom angeben';
     }
+    // user_app_id: Pflichtfeld, mindestens 3 Zeichen
+    if (!values.user_app_id || values.user_app_id.trim().length < 3) {
+      errors.user_app_id = 'App-ID muss mindestens 3 Zeichen lang sein';
+    }
     return errors;
   };
 
@@ -519,6 +523,7 @@ const CasesPage = () => {
                   onChange={(e) => setNewCase({ ...newCase, user_app_id: e.target.value })}
                   required
                 />
+                {formErrors.user_app_id && <div className="form-error">{formErrors.user_app_id}</div>}
               </div>
 
             </div>
