@@ -1,4 +1,4 @@
-# Infection Management System
+# Contagio
 
 Ein digitales Gesundheitssystem zur Verwaltung von Infektionsfällen, Kontaktverfolgung und Maßnahmenkoordination.
 
